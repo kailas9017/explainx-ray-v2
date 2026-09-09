@@ -1,0 +1,18 @@
+# Python
+backend/cxr-env/
+__pycache__/
+*.pyc
+
+# Dataset
+backend/data/
+
+# Trained model checkpoints
+backend/trained_model/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# OS/editor
+.DS_Store
+*.log

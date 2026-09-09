@@ -1,0 +1,12 @@
+flask==3.0.3
+flask-cors==4.0.1
+# NVIDIA CUDA build for the RTX 4050.  The default PyPI wheels are CPU-only.
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.13.0+cu130
+torchvision==0.28.0+cu130
+numpy>=1.26.0
+pandas>=2.2.0
+Pillow>=10.2.0
+matplotlib>=3.8.0
+scikit-learn>=1.4.0
+scikit-image>=0.22.0
