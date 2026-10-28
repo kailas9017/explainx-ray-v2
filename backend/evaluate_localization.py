@@ -83,6 +83,9 @@ def main():
     image_col = _column(frame, "Image Index")
     label_col = _column(frame, "Finding Label", "Finding Labels")
     frame[label_col] = frame[label_col].astype(str).str.strip()
+    # The BBox CSV uses the model/display spelling; NIH's image labels use
+    # "Infiltration". Keep BBox row filtering and model label lookup aligned.
+    frame[label_col] = frame[label_col].replace({"Infiltration": "Infiltrate"})
     frame = frame[frame[label_col].isin(DEFAULT_PATHOLOGIES)].copy()
 
     rows = []

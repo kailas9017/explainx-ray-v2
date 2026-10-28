@@ -83,6 +83,51 @@ python prepare_data.py
 python train.py
 ```
 
+### Optional: fine-tune with CheXpert-v1.0-small
+
+Keep the extracted CheXpert folder separate from `backend/data`. In PowerShell,
+from `backend`, point to the extracted folder and prepare patient-separated
+manifests:
+
+```powershell
+$env:CHEXPERT_DIR = (Resolve-Path ".\data\chexpert").Path
+python prepare_chexpert.py --dataset-root $env:CHEXPERT_DIR
+python train.py
+python evaluate_chexpert.py
+```
+
+The training loader samples 80% CheXpert and 20% NIH per epoch. It maps
+only shared labels (`Atelectasis`, `Cardiomegaly`, `Effusion` ← `Pleural
+Effusion`, `Pneumonia`, and `Pneumothorax`). NIH-only labels are masked for
+CheXpert samples, and uncertain/missing CheXpert labels are ignored in the
+loss. The patient-held-out CheXpert validation subset drives checkpoint
+selection and learning-rate reduction when CheXpert manifests exist. The
+untouched official `valid` split is used only by `evaluate_chexpert.py`, which
+reports AUROC, AUPRC, and precision/recall/F1 at 0.5 per class. The
+experimental checkpoint is saved under
+`trained_model/chexpert_experiment/`; it does not replace the currently served
+model automatically.
+
+To try the experimental checkpoint beside the current app, start a second
+backend from `backend`:
+
+```powershell
+$env:XRAY_MODEL_PATH = (Resolve-Path ".\trained_model\chexpert_experiment\best_model.pth").Path
+$env:XRAY_LABELS_PATH = (Resolve-Path ".\trained_model\chexpert_experiment\labels.json").Path
+$env:PORT = "5001"
+python app.py
+```
+
+Then start a second frontend from `frontend` in another terminal:
+
+```powershell
+$env:VITE_API_TARGET = "http://127.0.0.1:5001"
+npm run dev -- --port 5174
+```
+
+Open `http://localhost:5174` to try the fine-tuned model. The original app can
+continue using its original backend on port 5000.
+
 This trains DenseNet121 on the 8-pathology subset (same approach as before —
 transfer-learned from ImageNet, ~15 epochs). On an RTX 4050 this should take
 roughly the same time as your earlier successful run (which reached 0.82

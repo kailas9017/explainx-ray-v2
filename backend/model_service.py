@@ -7,9 +7,10 @@ import torch
 from PIL import Image
 from torchvision import transforms as T
 
-from config import MODEL_PATH, LABELS_PATH, DEVICE, DEFAULT_PATHOLOGIES
+from config import MODEL_PATH, LABELS_PATH, DEVICE, DEFAULT_PATHOLOGIES, MODEL_DIR
 from model import build_model
 from gradcam_utils import compute_gradcam, zone_breakdown, make_overlay_base64
+from ood_detection import check_out_of_distribution
 from severity import compute_asfi, asfi_severity, compute_zci, distribution_pattern
 from report_generator import generate_clinical_report
 
@@ -29,6 +30,8 @@ ANATOMICAL_REGION = {
     "Pneumonia": "Lobar / bronchovascular parenchyma",
     "Pneumothorax": "Pleural space / lung margin",
 }
+
+OOD_STATS_PATH = os.path.join(MODEL_DIR, "ood_stats.npz")
 
 class ModelNotReadyError(Exception):
     """Raised when best_model.pth / labels.json are missing or inconsistent.
@@ -91,16 +94,44 @@ def analyze_image_bytes(image_bytes: bytes):
     pil_img_224 = pil_img.resize((224, 224))
     img_tensor = EVAL_TRANSFORM(pil_img).unsqueeze(0).to(DEVICE)
 
-    with torch.no_grad():
-        logits = _MODEL(img_tensor)
-        probs = torch.sigmoid(logits)[0].cpu().numpy()
+    penultimate_features = []
+
+    def capture_features(_module, inputs, _output):
+        penultimate_features.append(inputs[0].detach().cpu().numpy())
+
+    # Capture this batch's classifier input during the existing forward pass;
+    # OOD checking must not add a second model inference.
+    handle = _MODEL.classifier.register_forward_hook(capture_features)
+    try:
+        with torch.no_grad():
+            logits = _MODEL(img_tensor)
+            probs = torch.sigmoid(logits)[0].cpu().numpy()
+    finally:
+        handle.remove()
+
+    feature_vec = penultimate_features[0][0]
+    is_ood, ood_reason, ood_details = check_out_of_distribution(pil_img, feature_vec, OOD_STATS_PATH)
+    if is_ood:
+        return {
+            "modelReady": True,
+            "outOfDistribution": True,
+            "outOfDistributionReason": ood_reason,
+            "outOfDistributionDetails": ood_details,
+            "findings": [],
+            "heatmapOverlay": None,
+            "primaryZones": [],
+            "clinicalReport": None,
+        }
 
     disease_prob_map = {name: round(float(p), 4) for name, p in zip(_LABELS, probs)}
     sorted_findings = sorted(disease_prob_map.items(), key=lambda x: x[1], reverse=True)
 
     top_prob = sorted_findings[0][1]
     threshold = max(0.25, top_prob * 0.45)
-    top_findings = [f for f in sorted_findings if f[1] >= threshold][:3] or sorted_findings[:1]
+    # Do not force the top class into the report when every class is below the
+    # minimum confidence threshold. That creates misleading findings for
+    # unrelated images (for example, a leg X-ray classified as 6% Effusion).
+    top_findings = [f for f in sorted_findings if f[1] >= threshold][:3]
 
     findings_list = []
     primary_cam = None

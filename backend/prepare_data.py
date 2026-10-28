@@ -8,8 +8,11 @@ def main():
     df = pd.read_csv(CSV_PATH)
 
     for pathology in DEFAULT_PATHOLOGIES:
+        # NIH calls this finding "Infiltration"; "Infiltrate" is the display
+        # name used by our model and the BBox annotations.
+        source_label = "Infiltration" if pathology == "Infiltrate" else pathology
         df[pathology] = df["Finding Labels"].apply(
-            lambda x: 1.0 if pathology in x else 0.0
+            lambda labels: float(source_label in str(labels).split("|"))
         )
 
     patient_ids = df["Patient ID"].unique()
@@ -30,6 +33,9 @@ def main():
     print(f"Train images: {len(train_df)}  ({train_df['Patient ID'].nunique()} patients)")
     print(f"Val images:   {len(val_df)}  ({val_df['Patient ID'].nunique()} patients)")
     print(f"Test images:  {len(test_df)}  ({test_df['Patient ID'].nunique()} patients)")
+    for split_name, split_df in (("Train", train_df), ("Val", val_df), ("Test", test_df)):
+        positive_counts = {name: int(split_df[name].sum()) for name in DEFAULT_PATHOLOGIES}
+        print(f"{split_name} positive counts: {positive_counts}")
     print("Saved: train.csv, val.csv, test.csv -> backend/data/")
 
 

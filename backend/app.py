@@ -1,4 +1,5 @@
 import base64
+import os
 import traceback
 
 from flask import Flask, request, jsonify
@@ -43,4 +44,4 @@ if __name__ == "__main__":
     # Single process, model loaded once at import time (see model_service.py).
     # debug=False on purpose: the reloader would re-import model_service.py
     # (and re-load the model onto the GPU) on every file save.
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")), debug=False)

@@ -5,6 +5,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---- Data locations (point these at your existing 45GB NIH ChestX-ray14 download) ----
 DATA_DIR = os.path.join(BASE_DIR, "data")
+# Optional CheXpert-v1.0-small extraction directory. Set CHEXPERT_DIR in the
+# environment; keeping it separate avoids mixing its files with NIH data.
+CHEXPERT_DIR = os.environ.get("CHEXPERT_DIR", os.path.join(DATA_DIR, "chexpert"))
+CHEXPERT_MANIFEST_DIR = os.path.join(DATA_DIR, "chexpert_manifests")
 IMAGE_DIR = os.path.join(DATA_DIR, "images")
 CSV_PATH = os.path.join(DATA_DIR, "Data_Entry_2017.csv")
 BBOX_CSV_PATH = os.path.join(DATA_DIR, "BBox_List_2017.csv")  # optional, used only by scripts/inspect_bboxes.py
@@ -20,8 +24,12 @@ TEST_CSV = os.path.join(DATA_DIR, "test.csv")
 # This is the fix for the "checkpoint trained on 8 classes but config says 14"
 # bug from the previous build.
 MODEL_DIR = os.path.join(BASE_DIR, "trained_model")
-MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pth")
-LABELS_PATH = os.path.join(MODEL_DIR, "labels.json")
+MODEL_PATH = os.environ.get("XRAY_MODEL_PATH", os.path.join(MODEL_DIR, "best_model.pth"))
+LABELS_PATH = os.environ.get("XRAY_LABELS_PATH", os.path.join(MODEL_DIR, "labels.json"))
+# Keep retraining output separate until it has been evaluated and explicitly promoted.
+EXPERIMENT_MODEL_DIR = os.path.join(MODEL_DIR, "chexpert_experiment")
+EXPERIMENT_MODEL_PATH = os.path.join(EXPERIMENT_MODEL_DIR, "best_model.pth")
+EXPERIMENT_LABELS_PATH = os.path.join(EXPERIMENT_MODEL_DIR, "labels.json")
 
 # ---- The 8-pathology subset ----
 # This matches NIH's BBox_List_2017.csv exactly (the only 8 classes NIH radiologists

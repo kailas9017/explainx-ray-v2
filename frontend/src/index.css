@@ -394,6 +394,38 @@ input:focus-visible,
   line-height: 1.5;
 }
 
+.ood-panel {
+  align-self: start;
+}
+
+.ood-dot {
+  background: var(--moderate) !important;
+  box-shadow: 0 0 8px rgba(234, 185, 58, 0.7);
+}
+
+.ood-warning {
+  margin: 20px;
+  padding: 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(234, 185, 58, 0.42);
+  background: rgba(234, 185, 58, 0.08);
+  color: #ffe5a0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ood-warning strong {
+  color: var(--moderate);
+}
+
+.ood-warning p {
+  margin: 8px 0 0;
+}
+
+.ood-warning .ood-reason {
+  color: var(--text-dim);
+}
+
 /* ---------- Zone score strip below the viewer ---------- */
 
 .zone-strip {

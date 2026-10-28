@@ -7,84 +7,119 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
 
-from config import DEFAULT_PATHOLOGIES, DEVICE, NUM_EPOCHS, LEARNING_RATE, MODEL_PATH, MODEL_DIR, LABELS_PATH
-from dataset import get_dataloaders
+from config import (
+    DEFAULT_PATHOLOGIES, DEVICE, NUM_EPOCHS, LEARNING_RATE,
+    MODEL_PATH, EXPERIMENT_MODEL_DIR, EXPERIMENT_MODEL_PATH, EXPERIMENT_LABELS_PATH,
+    CHEXPERT_MANIFEST_DIR,
+)
+from dataset import get_dataloaders, get_chexpert_validation_loader
 from model import build_model
 
 
 def train_one_epoch(model, loader, optimizer, criterion, device):
     model.train()
-    running_loss = 0.0
-    for images, labels in loader:
-        images, labels = images.to(device), labels.to(device)
+    total_loss = 0.0
+    total_observed = 0.0
+    for images, labels, observed in loader:
+        images, labels, observed = images.to(device), labels.to(device), observed.to(device)
         optimizer.zero_grad()
         outputs = model(images)
-        loss = criterion(outputs, labels)
+        losses = criterion(outputs, labels)
+        loss = (losses * observed).sum() / observed.sum().clamp_min(1.0)
         loss.backward()
         optimizer.step()
-        running_loss += loss.item() * images.size(0)
-    return running_loss / len(loader.dataset)
+        total_loss += losses.detach().mul(observed).sum().item()
+        total_observed += observed.sum().item()
+    return total_loss / max(total_observed, 1.0)
 
 
 def evaluate(model, loader, criterion, device, pathologies):
     model.eval()
-    running_loss = 0.0
-    all_labels, all_preds = [], []
+    all_labels, all_preds, all_observed = [], [], []
+    total_loss = 0.0
+    total_observed = 0.0
     with torch.no_grad():
-        for images, labels in loader:
-            images, labels = images.to(device), labels.to(device)
+        for images, labels, observed in loader:
+            images, labels, observed = images.to(device), labels.to(device), observed.to(device)
             outputs = model(images)
-            loss = criterion(outputs, labels)
-            running_loss += loss.item() * images.size(0)
+            losses = criterion(outputs, labels)
+            total_loss += losses.mul(observed).sum().item()
+            total_observed += observed.sum().item()
             probs = torch.sigmoid(outputs).cpu().numpy()
             all_preds.append(probs)
             all_labels.append(labels.cpu().numpy())
+            all_observed.append(observed.cpu().numpy())
 
     all_preds = np.concatenate(all_preds)
     all_labels = np.concatenate(all_labels)
+    all_observed = np.concatenate(all_observed).astype(bool)
 
     aurocs = []
     for i in range(all_labels.shape[1]):
+        known = all_observed[:, i]
         try:
-            auroc = roc_auc_score(all_labels[:, i], all_preds[:, i])
+            auroc = roc_auc_score(all_labels[known, i], all_preds[known, i])
         except ValueError:
             auroc = float("nan")
         aurocs.append(auroc)
 
-    avg_loss = running_loss / len(loader.dataset)
+    avg_loss = total_loss / max(total_observed, 1.0)
     mean_auroc = float(np.nanmean(aurocs))
     return avg_loss, mean_auroc, dict(zip(pathologies, aurocs))
 
 
 def save_checkpoint(model):
-    """The critical fix: the checkpoint and its label list are written together,
-    atomically, every time. model_service.py refuses to load one without the
-    other, and refuses to load them if the class counts disagree. This is the
-    single change that prevents the previous project's core bug from recurring."""
-    os.makedirs(MODEL_DIR, exist_ok=True)
-    torch.save(model.state_dict(), MODEL_PATH)
-    with open(LABELS_PATH, "w") as f:
+    """Save experimental weights separately from the model currently being served."""
+    os.makedirs(EXPERIMENT_MODEL_DIR, exist_ok=True)
+    torch.save(model.state_dict(), EXPERIMENT_MODEL_PATH)
+    with open(EXPERIMENT_LABELS_PATH, "w") as f:
         json.dump({"pathologies": DEFAULT_PATHOLOGIES}, f, indent=2)
 
 
 def main():
+    os.makedirs(EXPERIMENT_MODEL_DIR, exist_ok=True)
     print("Using device:", DEVICE)
     print("Training on pathologies:", DEFAULT_PATHOLOGIES)
     train_loader, val_loader, test_loader = get_dataloaders(DEFAULT_PATHOLOGIES)
+    print(f"Training samples per epoch: {len(train_loader.dataset):,}")
 
     model = build_model(num_classes=len(DEFAULT_PATHOLOGIES)).to(DEVICE)
+    if os.path.isfile(MODEL_PATH):
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+        print(f"Fine-tuning existing checkpoint: {MODEL_PATH}")
+    else:
+        print("No existing checkpoint found; starting from ImageNet initialization.")
 
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(reduction="none")
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=2)
 
     history = {"train_loss": [], "val_loss": [], "val_auroc": []}
-    best_auroc = 0.0
+    best_auroc = float("-inf")
+
+    # When CheXpert manifests exist, select checkpoints on the patient-held-out
+    # CheXpert validation subset, not a mixed NIH/CheXpert score. This matches
+    # the target domain and avoids validation leakage from the NIH replay set.
+    has_chexpert = os.path.isfile(os.path.join(CHEXPERT_MANIFEST_DIR, "train.csv"))
+    target_loader = (
+        get_chexpert_validation_loader(DEFAULT_PATHOLOGIES) if has_chexpert else None
+    )
 
     for epoch in range(NUM_EPOCHS):
         train_loss = train_one_epoch(model, train_loader, optimizer, criterion, DEVICE)
         val_loss, val_auroc, per_class = evaluate(model, val_loader, criterion, DEVICE, DEFAULT_PATHOLOGIES)
-        scheduler.step(val_loss)
+        selection_auroc = val_auroc
+        selection_loss = val_loss
+        if has_chexpert:
+            # The loader returns the mixed validation set; use a dedicated
+            # CheXpert validation loader for model selection.
+            selection_loss, selection_auroc, target_per_class = evaluate(
+                model, target_loader, criterion, DEVICE, DEFAULT_PATHOLOGIES
+            )
+            print("   CheXpert validation AUROC:", ", ".join(
+                f"{name}={score:.3f}" for name, score in target_per_class.items()
+            ))
+        scheduler.step(selection_loss)
 
         history["train_loss"].append(train_loss)
         history["val_loss"].append(val_loss)
@@ -92,13 +127,16 @@ def main():
 
         print(f"Epoch {epoch + 1}/{NUM_EPOCHS} | Train Loss: {train_loss:.4f} | "
               f"Val Loss: {val_loss:.4f} | Val Mean AUROC: {val_auroc:.4f}")
+        print("   Per-class validation AUROC:", ", ".join(
+            f"{name}={score:.3f}" for name, score in per_class.items()
+        ))
 
-        if val_auroc > best_auroc:
-            best_auroc = val_auroc
+        if selection_auroc > best_auroc:
+            best_auroc = selection_auroc
             save_checkpoint(model)
-            print(f"   -> New best model saved (AUROC {best_auroc:.4f}), labels.json written alongside it.")
+            print(f"   -> Experimental checkpoint saved to {EXPERIMENT_MODEL_PATH} (target AUROC {best_auroc:.4f}).")
 
-    with open("history.json", "w") as f:
+    with open(os.path.join(EXPERIMENT_MODEL_DIR, "history.json"), "w") as f:
         json.dump(history, f, indent=2)
 
     plt.figure(figsize=(8, 5))
@@ -109,7 +147,7 @@ def main():
     plt.title("Training and Validation Loss")
     plt.legend()
     plt.grid(True, alpha=0.3)
-    plt.savefig("loss_curve.png", dpi=150, bbox_inches="tight")
+    plt.savefig(os.path.join(EXPERIMENT_MODEL_DIR, "loss_curve.png"), dpi=150, bbox_inches="tight")
 
     plt.figure(figsize=(8, 5))
     plt.plot(history["val_auroc"], label="Validation Mean AUROC", marker="o", color="green")
@@ -118,11 +156,11 @@ def main():
     plt.title("Validation AUROC over Training")
     plt.legend()
     plt.grid(True, alpha=0.3)
-    plt.savefig("auroc_curve.png", dpi=150, bbox_inches="tight")
+    plt.savefig(os.path.join(EXPERIMENT_MODEL_DIR, "auroc_curve.png"), dpi=150, bbox_inches="tight")
 
     print("Training complete. Best validation AUROC:", best_auroc)
-    print(f"Checkpoint: {MODEL_PATH}")
-    print(f"Labels:     {LABELS_PATH}")
+    print(f"Experimental checkpoint: {EXPERIMENT_MODEL_PATH}")
+    print(f"Labels:                  {EXPERIMENT_LABELS_PATH}")
 
 
 if __name__ == "__main__":

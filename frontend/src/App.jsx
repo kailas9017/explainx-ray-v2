@@ -57,6 +57,24 @@ export default function App() {
     }
   }
 
+  const isOutOfDistribution = result?.outOfDistribution === true;
+  const oodMessage = result?.outOfDistributionReason || "This image is outside the model's supported input distribution.";
+
+  function OODWarning({ title }) {
+    return (
+      <section className="panel ood-panel" role="alert">
+        <div className="panel-header">
+          <div className="panel-title"><span className="dot ood-dot" />{title}</div>
+        </div>
+        <div className="ood-warning">
+          <strong>Analysis not performed</strong>
+          <p>This image does not appear to be a chest radiograph, so no analysis was performed.</p>
+          <p className="ood-reason">{oodMessage}</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -94,11 +112,22 @@ export default function App() {
 
       {activeTab === "studio" ? (
         <main className="studio">
-          <DiagnosticStudio previewUrl={previewUrl} result={result} analyzing={analyzing} error={error} />
-          <FindingsPanel result={result} pathologiesScreened={health?.pathologies} />
+          {isOutOfDistribution ? (
+            <>
+              <OODWarning title="Diagnostic Studio" />
+              <OODWarning title="Detected Pathologies" />
+            </>
+          ) : (
+            <>
+              <DiagnosticStudio previewUrl={previewUrl} result={result} analyzing={analyzing} error={error} />
+              <FindingsPanel result={result} pathologiesScreened={health?.pathologies} />
+            </>
+          )}
         </main>
       ) : (
-        <main className="report-page"><ClinicalReport result={result} /></main>
+        <main className="report-page">
+          {isOutOfDistribution ? <OODWarning title="Clinical Report" /> : <ClinicalReport result={result} />}
+        </main>
       )}
 
       {showModal && (
