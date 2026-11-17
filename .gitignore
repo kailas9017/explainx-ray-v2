@@ -18,3 +18,8 @@ frontend/dist/
 *.log
 # Archived model checkpoints
 backend/trained_model_old/
+
+# research paper: local-only artefacts
+backend/research/outputs/old_model_invalid/
+backend/research/outputs/eval_pipeline_log.txt
+~$*

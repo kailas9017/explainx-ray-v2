@@ -1,0 +1,120 @@
+train: 78,566 images; positives per class: {'Atelectasis': 8190, 'Cardiomegaly': 1891, 'Effusion': 9438, 'Infiltrate': 13868, 'Mass': 4260, 'Nodule': 4432, 'Pneumonia': 995, 'Pneumothorax': 3770}
+val: 17,063 images; positives per class: {'Atelectasis': 1692, 'Cardiomegaly': 446, 'Effusion': 1987, 'Infiltrate': 3094, 'Mass': 795, 'Nodule': 954, 'Pneumonia': 222, 'Pneumothorax': 807}
+device cuda; up to 15 epochs, early-stopping patience 3
+  epoch 1 batch 500/4911 loss 0.2519 (0.229s/batch, ~17 min left in epoch)
+  epoch 1 batch 1000/4911 loss 0.2361 (0.175s/batch, ~11 min left in epoch)
+  epoch 1 batch 1500/4911 loss 0.2298 (0.154s/batch, ~9 min left in epoch)
+  epoch 1 batch 2000/4911 loss 0.2261 (0.153s/batch, ~7 min left in epoch)
+  epoch 1 batch 2500/4911 loss 0.2226 (0.144s/batch, ~6 min left in epoch)
+  epoch 1 batch 3000/4911 loss 0.2204 (0.137s/batch, ~4 min left in epoch)
+  epoch 1 batch 3500/4911 loss 0.2184 (0.132s/batch, ~3 min left in epoch)
+  epoch 1 batch 4000/4911 loss 0.2166 (0.133s/batch, ~2 min left in epoch)
+  epoch 1 batch 4500/4911 loss 0.2158 (0.129s/batch, ~1 min left in epoch)
+Epoch 1: train 0.2154 | val loss 0.2043 | val mean AUROC 0.7941 | 12.7 min
+   Atelectasis 0.786  Cardiomegaly 0.884  Effusion 0.867  Infiltrate 0.697  Mass 0.819  Nodule 0.720  Pneumonia 0.721  Pneumothorax 0.859
+   -> saved best checkpoint (epoch 1)
+  epoch 2 batch 500/4911 loss 0.2050 (0.102s/batch, ~7 min left in epoch)
+  epoch 2 batch 1000/4911 loss 0.2036 (0.104s/batch, ~7 min left in epoch)
+  epoch 2 batch 1500/4911 loss 0.2028 (0.117s/batch, ~7 min left in epoch)
+  epoch 2 batch 2000/4911 loss 0.2030 (0.135s/batch, ~7 min left in epoch)
+  epoch 2 batch 2500/4911 loss 0.2023 (0.136s/batch, ~5 min left in epoch)
+  epoch 2 batch 3000/4911 loss 0.2023 (0.130s/batch, ~4 min left in epoch)
+  epoch 2 batch 3500/4911 loss 0.2023 (0.127s/batch, ~3 min left in epoch)
+  epoch 2 batch 4000/4911 loss 0.2024 (0.123s/batch, ~2 min left in epoch)
+  epoch 2 batch 4500/4911 loss 0.2018 (0.121s/batch, ~1 min left in epoch)
+Epoch 2: train 0.2020 | val loss 0.1990 | val mean AUROC 0.8089 | 10.7 min
+   Atelectasis 0.794  Cardiomegaly 0.908  Effusion 0.877  Infiltrate 0.706  Mass 0.839  Nodule 0.732  Pneumonia 0.741  Pneumothorax 0.874
+   -> saved best checkpoint (epoch 2)
+  epoch 3 batch 500/4911 loss 0.1983 (0.100s/batch, ~7 min left in epoch)
+  epoch 3 batch 1000/4911 loss 0.1970 (0.100s/batch, ~6 min left in epoch)
+  epoch 3 batch 1500/4911 loss 0.1978 (0.099s/batch, ~6 min left in epoch)
+  epoch 3 batch 2000/4911 loss 0.1965 (0.099s/batch, ~5 min left in epoch)
+  epoch 3 batch 2500/4911 loss 0.1975 (0.099s/batch, ~4 min left in epoch)
+  epoch 3 batch 3000/4911 loss 0.1984 (0.099s/batch, ~3 min left in epoch)
+  epoch 3 batch 3500/4911 loss 0.1987 (0.099s/batch, ~2 min left in epoch)
+  epoch 3 batch 4000/4911 loss 0.1981 (0.099s/batch, ~2 min left in epoch)
+  epoch 3 batch 4500/4911 loss 0.1976 (0.099s/batch, ~1 min left in epoch)
+Epoch 3: train 0.1975 | val loss 0.1972 | val mean AUROC 0.8087 | 9.1 min
+   Atelectasis 0.796  Cardiomegaly 0.908  Effusion 0.884  Infiltrate 0.712  Mass 0.824  Nodule 0.746  Pneumonia 0.741  Pneumothorax 0.860
+  epoch 4 batch 500/4911 loss 0.1898 (0.100s/batch, ~7 min left in epoch)
+  epoch 4 batch 1000/4911 loss 0.1909 (0.099s/batch, ~6 min left in epoch)
+  epoch 4 batch 1500/4911 loss 0.1932 (0.099s/batch, ~6 min left in epoch)
+  epoch 4 batch 2000/4911 loss 0.1925 (0.099s/batch, ~5 min left in epoch)
+  epoch 4 batch 2500/4911 loss 0.1928 (0.099s/batch, ~4 min left in epoch)
+  epoch 4 batch 3000/4911 loss 0.1938 (0.099s/batch, ~3 min left in epoch)
+  epoch 4 batch 3500/4911 loss 0.1940 (0.099s/batch, ~2 min left in epoch)
+  epoch 4 batch 4000/4911 loss 0.1942 (0.099s/batch, ~2 min left in epoch)
+  epoch 4 batch 4500/4911 loss 0.1938 (0.099s/batch, ~1 min left in epoch)
+Epoch 4: train 0.1943 | val loss 0.2006 | val mean AUROC 0.8118 | 9.1 min
+   Atelectasis 0.802  Cardiomegaly 0.914  Effusion 0.875  Infiltrate 0.705  Mass 0.834  Nodule 0.754  Pneumonia 0.744  Pneumothorax 0.868
+   -> saved best checkpoint (epoch 4)
+  epoch 5 batch 500/4911 loss 0.1938 (0.100s/batch, ~7 min left in epoch)
+  epoch 5 batch 1000/4911 loss 0.1921 (0.100s/batch, ~7 min left in epoch)
+  epoch 5 batch 1500/4911 loss 0.1938 (0.100s/batch, ~6 min left in epoch)
+  epoch 5 batch 2000/4911 loss 0.1929 (0.099s/batch, ~5 min left in epoch)
+  epoch 5 batch 2500/4911 loss 0.1918 (0.099s/batch, ~4 min left in epoch)
+  epoch 5 batch 3000/4911 loss 0.1911 (0.099s/batch, ~3 min left in epoch)
+  epoch 5 batch 3500/4911 loss 0.1906 (0.099s/batch, ~2 min left in epoch)
+  epoch 5 batch 4000/4911 loss 0.1907 (0.099s/batch, ~2 min left in epoch)
+  epoch 5 batch 4500/4911 loss 0.1913 (0.099s/batch, ~1 min left in epoch)
+Epoch 5: train 0.1914 | val loss 0.1978 | val mean AUROC 0.8159 | 9.1 min
+   Atelectasis 0.807  Cardiomegaly 0.914  Effusion 0.883  Infiltrate 0.704  Mass 0.839  Nodule 0.762  Pneumonia 0.743  Pneumothorax 0.875
+   -> saved best checkpoint (epoch 5)
+  epoch 6 batch 500/4911 loss 0.1845 (0.100s/batch, ~7 min left in epoch)
+  epoch 6 batch 1000/4911 loss 0.1868 (0.100s/batch, ~7 min left in epoch)
+  epoch 6 batch 1500/4911 loss 0.1888 (0.100s/batch, ~6 min left in epoch)
+  epoch 6 batch 2000/4911 loss 0.1885 (0.100s/batch, ~5 min left in epoch)
+  epoch 6 batch 2500/4911 loss 0.1882 (0.100s/batch, ~4 min left in epoch)
+  epoch 6 batch 3000/4911 loss 0.1881 (0.100s/batch, ~3 min left in epoch)
+  epoch 6 batch 3500/4911 loss 0.1879 (0.100s/batch, ~2 min left in epoch)
+  epoch 6 batch 4000/4911 loss 0.1881 (0.099s/batch, ~2 min left in epoch)
+  epoch 6 batch 4500/4911 loss 0.1883 (0.099s/batch, ~1 min left in epoch)
+Epoch 6: train 0.1882 | val loss 0.1976 | val mean AUROC 0.8124 | 9.1 min
+   Atelectasis 0.794  Cardiomegaly 0.910  Effusion 0.879  Infiltrate 0.708  Mass 0.846  Nodule 0.761  Pneumonia 0.736  Pneumothorax 0.865
+  epoch 7 batch 500/4911 loss 0.1811 (0.100s/batch, ~7 min left in epoch)
+  epoch 7 batch 1000/4911 loss 0.1805 (0.099s/batch, ~6 min left in epoch)
+  epoch 7 batch 1500/4911 loss 0.1798 (0.099s/batch, ~6 min left in epoch)
+  epoch 7 batch 2000/4911 loss 0.1799 (0.099s/batch, ~5 min left in epoch)
+  epoch 7 batch 2500/4911 loss 0.1795 (0.099s/batch, ~4 min left in epoch)
+  epoch 7 batch 3000/4911 loss 0.1796 (0.099s/batch, ~3 min left in epoch)
+  epoch 7 batch 3500/4911 loss 0.1796 (0.099s/batch, ~2 min left in epoch)
+  epoch 7 batch 4000/4911 loss 0.1796 (0.099s/batch, ~2 min left in epoch)
+  epoch 7 batch 4500/4911 loss 0.1794 (0.100s/batch, ~1 min left in epoch)
+Epoch 7: train 0.1790 | val loss 0.1986 | val mean AUROC 0.8226 | 9.1 min
+   Atelectasis 0.814  Cardiomegaly 0.917  Effusion 0.882  Infiltrate 0.715  Mass 0.853  Nodule 0.768  Pneumonia 0.754  Pneumothorax 0.878
+   -> saved best checkpoint (epoch 7)
+  epoch 8 batch 500/4911 loss 0.1764 (0.101s/batch, ~7 min left in epoch)
+  epoch 8 batch 1000/4911 loss 0.1749 (0.101s/batch, ~7 min left in epoch)
+  epoch 8 batch 1500/4911 loss 0.1755 (0.100s/batch, ~6 min left in epoch)
+  epoch 8 batch 2000/4911 loss 0.1756 (0.100s/batch, ~5 min left in epoch)
+  epoch 8 batch 2500/4911 loss 0.1753 (0.100s/batch, ~4 min left in epoch)
+  epoch 8 batch 3000/4911 loss 0.1743 (0.100s/batch, ~3 min left in epoch)
+  epoch 8 batch 3500/4911 loss 0.1745 (0.100s/batch, ~2 min left in epoch)
+  epoch 8 batch 4000/4911 loss 0.1748 (0.100s/batch, ~2 min left in epoch)
+  epoch 8 batch 4500/4911 loss 0.1747 (0.100s/batch, ~1 min left in epoch)
+Epoch 8: train 0.1744 | val loss 0.1985 | val mean AUROC 0.8177 | 9.2 min
+   Atelectasis 0.812  Cardiomegaly 0.917  Effusion 0.881  Infiltrate 0.710  Mass 0.846  Nodule 0.774  Pneumonia 0.731  Pneumothorax 0.870
+  epoch 9 batch 500/4911 loss 0.1720 (0.100s/batch, ~7 min left in epoch)
+  epoch 9 batch 1000/4911 loss 0.1701 (0.100s/batch, ~6 min left in epoch)
+  epoch 9 batch 1500/4911 loss 0.1703 (0.099s/batch, ~6 min left in epoch)
+  epoch 9 batch 2000/4911 loss 0.1695 (0.099s/batch, ~5 min left in epoch)
+  epoch 9 batch 2500/4911 loss 0.1692 (0.099s/batch, ~4 min left in epoch)
+  epoch 9 batch 3000/4911 loss 0.1693 (0.099s/batch, ~3 min left in epoch)
+  epoch 9 batch 3500/4911 loss 0.1692 (0.099s/batch, ~2 min left in epoch)
+  epoch 9 batch 4000/4911 loss 0.1696 (0.099s/batch, ~2 min left in epoch)
+  epoch 9 batch 4500/4911 loss 0.1697 (0.100s/batch, ~1 min left in epoch)
+Epoch 9: train 0.1698 | val loss 0.2024 | val mean AUROC 0.8154 | 9.1 min
+   Atelectasis 0.808  Cardiomegaly 0.914  Effusion 0.878  Infiltrate 0.707  Mass 0.841  Nodule 0.774  Pneumonia 0.732  Pneumothorax 0.868
+  epoch 10 batch 500/4911 loss 0.1600 (0.100s/batch, ~7 min left in epoch)
+  epoch 10 batch 1000/4911 loss 0.1606 (0.100s/batch, ~7 min left in epoch)
+  epoch 10 batch 1500/4911 loss 0.1599 (0.099s/batch, ~6 min left in epoch)
+  epoch 10 batch 2000/4911 loss 0.1605 (0.099s/batch, ~5 min left in epoch)
+  epoch 10 batch 2500/4911 loss 0.1603 (0.099s/batch, ~4 min left in epoch)
+  epoch 10 batch 3000/4911 loss 0.1603 (0.099s/batch, ~3 min left in epoch)
+  epoch 10 batch 3500/4911 loss 0.1603 (0.099s/batch, ~2 min left in epoch)
+  epoch 10 batch 4000/4911 loss 0.1600 (0.099s/batch, ~2 min left in epoch)
+  epoch 10 batch 4500/4911 loss 0.1602 (0.099s/batch, ~1 min left in epoch)
+Epoch 10: train 0.1600 | val loss 0.2057 | val mean AUROC 0.8106 | 9.1 min
+   Atelectasis 0.808  Cardiomegaly 0.910  Effusion 0.876  Infiltrate 0.694  Mass 0.831  Nodule 0.773  Pneumonia 0.731  Pneumothorax 0.862
+early stopping: no improvement for 3 epochs
+done. best epoch 7, val mean AUROC 0.8226; outputs in C:\Users\Kaila\Downloads\explainx-ray-v2\backend\trained_model_nih

@@ -1,0 +1,17 @@
+{
+  "model": "C:\\Users\\Kaila\\Downloads\\explainx-ray-v2\\backend\\trained_model_nih\\best_model.pth",
+  "test_images": 16491,
+  "test_patients": 4621,
+  "mean_auroc": 0.8194865463771607,
+  "mean_auroc_ci": [
+    0.8115505625404896,
+    0.8266551727517355
+  ],
+  "mean_auprc": 0.3008337098285455,
+  "mean_auprc_ci": [
+    0.28696396405514457,
+    0.31616044058890574
+  ],
+  "bootstrap": "1000 patient-level resamples, percentile 95% CI, seed 2026",
+  "thresholds": "Youden's J fit on NIH validation split only"
+}

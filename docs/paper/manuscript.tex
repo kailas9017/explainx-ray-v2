@@ -1,0 +1,244 @@
+%% Manuscript draft for Multimedia Tools and Applications, Track 8: Medical Imaging.
+%% Uses the Springer Nature LaTeX template (sn-jnl.cls). In Overleaf, open the
+%% "Springer Nature LaTeX Template" and replace its main .tex with this file and
+%% add references.bib. Figures are produced by backend/research/*.py into
+%% backend/research/outputs/ -- copy the PDFs into a figures/ folder.
+%%
+%% Markers:  \RES{...}  = number to fill from research/outputs/results_summary.json
+%%           \TODO{...} = author action needed
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\newcommand{\RES}[1]{\textcolor{red}{[#1]}}
+\newcommand{\TODO}[1]{\textcolor{blue}{[TODO: #1]}}
+
+\begin{document}
+
+\title[Grid zones overstate CAM localisation on chest X-rays]{Grid Zones Overstate Where Class Activation Maps Point: An Anatomy-Aware Zone-Level Evaluation of CAM Explanations for Multi-Label Chest X-ray Classification}
+
+\author*[1]{\fnm{Kailas} \sur{Kunjumon}}\email{kailas.kunjumon@msds.christuniversity.in}
+\author[1]{\fnm{Teena} \sur{Tom}}\email{teena.tom@msds.christuniversity.in}
+\author[1]{\fnm{Anusha} \sur{James}}\email{anusha.james@christuniversity.in}
+\affil*[1]{\orgdiv{Department of Computer Science}, \orgname{Christ University, Yeshwanthpur Campus}, \orgaddress{\city{Bengaluru}, \postcode{560073}, \state{Karnataka}, \country{India}}}
+
+\abstract{
+\textbf{Purpose:} Class activation maps (CAMs) are the most common explanation attached to chest X-ray classifiers, and they are increasingly summarised by lung zone. Zone-wise explanations, however, are almost always judged by visual inspection, and the zones themselves are often a fixed image grid that ignores where the lungs actually are.
+\textbf{Methods:} We train a DenseNet-121 multi-label classifier for eight thoracic findings on NIH ChestX-ray14 and build an anatomy-aware six-zone partition from a pretrained lung segmentation model, using a dilated convex hull of each lung so that pathology at the lung margin is not excluded. We define zone-level metrics (zone hit, top-2 zone hit, in-zone CAM mass) and evaluate four CAM methods (Grad-CAM, Grad-CAM++, LayerCAM, Score-CAM) against 984 radiologist bounding boxes, comparing anatomical zones with the fixed $3\times2$ grid and with a leave-one-out class-prior baseline. We also test two explanation-derived descriptors: an activation-based severity index (ASFI) and a zone concentration index (ZCI).
+\textbf{Results:} The classifier reaches a mean test AUROC of 0.819 (95\% CI 0.812--0.827). On 834 lung-finding boxes, every CAM method scores lower under anatomical zones than under the grid (LayerCAM 45.8\% vs.\ 59.2\%; exact McNemar $p<10^{-12}$), although the class-prior baseline is the same for both partitions (31.8\% vs.\ 31.5\%). Only 56\% of CAM mass falls inside the lung zones, which occupy 35\% of the image. On boxes from held-out images, anatomical zone hit (35--39\%) does not exceed the class prior (41\%). Grad-CAM returns an all-zero map for 19.4\% of findings, and for 66\% of those predicted with probability below 0.1; the other methods never do. ZCI and ASFI track lesion focality and extent only weakly (ASFI vs.\ box area $\rho=0.14$).
+\textbf{Conclusion:} Grid-based zone summaries overstate how well CAMs localise thoracic findings. Anatomy-aware zones with a class-prior baseline give a stricter, clinically legible audit, under which current CAMs localise only modestly beyond dataset priors.}
+
+\keywords{Explainable AI, Chest X-ray, Class activation map, Grad-CAM, Lung segmentation, Medical image classification}
+
+\maketitle
+
+%% ---------------------------------------------------------------------------
+\section{Introduction}\label{sec:intro}
+
+Chest radiography is the most frequently performed imaging examination, and deep convolutional networks trained on large public datasets such as ChestX-ray14~\cite{wang2017chestxray8} and CheXpert~\cite{irvin2019chexpert} now detect many thoracic findings with high discrimination~\cite{rajpurkar2017chexnet}. Because these systems are intended to support clinical reading, they are usually accompanied by a visual explanation, most often a class activation map (CAM) such as Grad-CAM~\cite{selvaraju2017gradcam}, that highlights the image regions driving a prediction.
+
+Radiologists, however, do not describe findings as heatmaps. They report them by anatomical location --- side and upper, mid or lower zone --- and several clinical scores (e.g. the Brixia score~\cite{borghesi2020brixia}) are defined on lung zones. A natural step, taken by recent work~\cite{tbzones2023scirep,zoneaware2026pneumonia}, is therefore to summarise CAMs by zone. Two gaps remain. First, zone-wise CAMs are mostly assessed \emph{qualitatively}, by showing a few examples to a radiologist~\cite{tbzones2023scirep}; the one quantitative report we found~\cite{zoneaware2026pneumonia} gives a per-zone ``alignment'' percentage without defining the matching criterion, a baseline or confidence intervals, for a single CAM method on a binary paediatric pneumonia task. Second, zones are frequently defined as a fixed image grid, so a ``right upper zone'' can be dominated by shoulder and a ``lower zone'' by abdomen, depending on patient positioning.
+
+Pixel-level benchmarks show that saliency methods localise chest X-ray findings substantially worse than radiologists~\cite{saporta2022benchmarking,arun2021trustworthiness}, but they do not address the coarser, zone-level question that matters for a report: \emph{is the explanation at least in the right part of the right lung?}
+
+This paper answers that question quantitatively, and the answer depends strongly on how the zones are drawn. Our contributions are:
+\begin{enumerate}
+\item An \textbf{anatomy-aware six-zone partition} of the chest radiograph derived from a pretrained lung segmentation model, with a dilated convex-hull correction for marginal pathology. Raw lung masks leave 26.2\% of the expert-box area outside the lungs (55.2\% for effusion); the correction reduces this to 13.4\% (34.9\%).
+\item \textbf{Zone-level faithfulness metrics} evaluated against 984 radiologist bounding boxes, with exact paired tests, Wilson confidence intervals and a leave-one-out class-prior baseline that a CAM must beat to show localisation beyond dataset priors.
+\item The finding that \textbf{a fixed grid overstates CAM localisation}: on the same boxes, and with the same class-prior difficulty, all four CAM methods lose 6--14 percentage points of zone-hit accuracy when zones follow the lungs, because a large share of CAM mass lies outside the lung fields. On held-out images, CAMs no longer beat the class prior under anatomical zones.
+\item A \textbf{comparison of four CAM methods}, including the observation that standard Grad-CAM returns empty maps for most low-confidence findings, and a quantitative test of two \textbf{explanation-derived descriptors} (ASFI, ZCI), which turn out to carry little information about lesion extent or focality.
+\end{enumerate}
+
+%% ---------------------------------------------------------------------------
+\section{Related work}\label{sec:related}
+
+\paragraph{Chest X-ray classification.} ChestX-ray14 introduced 112,120 frontal radiographs with text-mined labels for 14 findings and 984 bounding boxes for eight of them~\cite{wang2017chestxray8}. CheXNet fine-tuned a DenseNet-121~\cite{huang2017densenet} on this dataset~\cite{rajpurkar2017chexnet}, and DenseNet-121 remains a standard backbone. We deliberately use this well-understood architecture: our contribution concerns the evaluation of explanations, not classification accuracy.
+
+\paragraph{Class activation maps.} Grad-CAM~\cite{selvaraju2017gradcam} weights the final convolutional feature maps by spatially averaged gradients. Grad-CAM++~\cite{chattopadhay2018gradcampp} uses higher-order gradient terms to better cover multiple instances, LayerCAM~\cite{jiang2021layercam} uses element-wise positive gradients, and Score-CAM~\cite{wang2020scorecam} replaces gradients with the change in class score when each activation map masks the input. Saliency maps can be insensitive to model parameters~\cite{adebayo2018sanity}, which motivates quantitative evaluation against ground truth.
+
+\paragraph{Evaluating saliency on chest X-rays.} Saporta et al.~\cite{saporta2022benchmarking} benchmarked saliency methods on CheXpert against radiologist segmentations and found all methods underperform a human benchmark; Arun et al.~\cite{arun2021trustworthiness} reported similar concerns about localisation and robustness. Both evaluate at the pixel or segment level. The pointing game~\cite{zhang2018pointing} is a coarser alternative that checks whether the saliency maximum falls inside the annotation.
+
+\paragraph{Zone-wise analysis.} Devasia et al.~\cite{tbzones2023scirep} trained an EfficientNet-B4 to classify active-tuberculosis findings per lung zone (upper, mid and lower of each lung) and had a radiologist review Grad-CAM maps qualitatively. Dahan et al.~\cite{zoneaware2026pneumonia} detected five lung zones with YOLOv8, classified pneumonia from zone-wise ResNet-18 branches and reported, per zone, the percentage of Grad-CAM ``correctly aligned with annotated lesion'' (85.2\% on average); the criterion, the number of annotated lesions and any baseline are not reported, and the zones are rectangular detector boxes. In both works the zones are inputs to the classifier. We instead keep a standard whole-image classifier and use anatomical zones only to \emph{evaluate} its explanations, with explicit metrics, a class-prior baseline, four CAM methods and paired statistical tests. Closest to our descriptors, Rahman et al.~\cite{rahman2024sai} combine Grad-CAM maps from the last three pooling layers of a VGG-16 (ML-Grad-CAM) for three-class COVID-19/pneumonia/normal classification and define a Severity Assessment Index (SAI) as the mean of the $7\times7$ saliency map. Lung segmentation is used there to crop the input, and SAI is supported by per-class distributions and examples rather than tested against an independent measure of lesion extent. Our setting differs in four respects: (i) the task is multi-label over eight findings; (ii) ASFI combines the Otsu-activated extent, the intensity within it and the class probability rather than the global mean of the map; (iii) the zone concentration index adds \emph{where} the evidence lies, which a single scalar cannot express; and (iv) both descriptors are tested quantitatively against expert annotations, and lung segmentation is used to define zones for evaluating the explanation, not to preprocess the input.
+
+%% ---------------------------------------------------------------------------
+\section{Materials and methods}\label{sec:methods}
+
+\subsection{Data}
+We use NIH ChestX-ray14~\cite{wang2017chestxray8} restricted to the eight findings that have bounding-box annotations: atelectasis, cardiomegaly, effusion, infiltration, mass, nodule, pneumonia and pneumothorax. Images are split by patient into training (70\%), validation (15\%) and test (15\%) sets with a fixed seed, giving 78,566 / 17,063 / 16,491 images with no patient overlap. The 984 bounding boxes cover 880 images; 679 boxes lie in training images, 166 in validation and 139 in test images. Because the classifier never sees boxes, all boxes can be used to evaluate localisation; we additionally report results on the 305 boxes (242 lung-finding boxes) from held-out validation and test images.
+
+\subsection{Classifier}
+A DenseNet-121~\cite{huang2017densenet} initialised from ImageNet has its classifier replaced by an eight-output linear layer with sigmoid activations. Images are resized to $224\times224$ and ImageNet-normalised; training uses horizontal flips and $\pm10^\circ$ rotations, binary cross-entropy, Adam (learning rate $10^{-4}$, batch size 16), mixed-precision arithmetic and a reduce-on-plateau schedule (factor 0.5, patience 2) for at most 15 epochs with a fixed random seed. Training stops when the mean validation AUROC has not improved for three epochs, and the checkpoint with the highest mean validation AUROC (epoch 7 of 10; mean validation AUROC 0.823) is kept. Before training we verify that every class has positive examples in both training and validation splits, and every epoch reports per-class validation AUROC; an undefined per-class AUROC aborts training rather than being silently dropped from the mean. Per-class operating thresholds are chosen by Youden's $J$~\cite{youden1950} on the validation set only.
+
+\subsection{Class activation maps}
+All CAMs are computed for the annotated class at DenseNet-121's final dense block using the pytorch-grad-cam implementation~\cite{gildenblat2021pytorchgradcam}, ReLU-rectified and normalised to $[0,1]$. In torchvision's DenseNet the final ReLU is applied in place after the feature block; we make it an explicit layer so that every method operates on the rectified maps that feed the classifier (logits are unchanged). We verified that the resulting Grad-CAM is identical to our application's independent implementation (Pearson $r=1.000$). A map with no positive evidence is all zeros; we record such \emph{empty} maps and score them as misses.
+
+\subsection{Zone partitions}
+\paragraph{Fixed grid.} The $224\times224$ image is divided into three equal rows (upper, mid, lower) and two columns. Following radiological convention, the patient's right is image-left.
+
+\paragraph{Anatomy-aware zones.} Each radiograph is segmented with the pretrained ChestX-Det PSPNet model distributed with TorchXRayVision~\cite{cohen2022torchxrayvision,lian2021chestxdet}, yielding left- and right-lung masks resampled to the CAM grid. Segmentation models trace aerated lung, so opacified or displaced lung at the margin --- precisely where effusion, pneumothorax and atelectasis are annotated --- is often excluded (Fig.~\ref{fig:zones}). We therefore replace each lung by its convex hull dilated by 4 pixels (on the $224$ grid), assigning pixels claimed by both hemithoraces to neither. Each region is split into upper, mid and lower thirds of its own vertical extent, giving six zones. An image is excluded from zone metrics if either lung covers less than 2\% of the image (4 boxes); both partitions are compared on the same remaining boxes.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/zones_demo.png}
+\caption{Fixed grid (left), raw lung-mask zones (middle) and anatomy-aware hull zones (right) with an expert bounding box (white). For effusion, only 50\% of the box lies inside the raw lung mask, but 95\% lies inside the hull-based zone.}\label{fig:zones}
+\end{figure}
+
+\subsection{Zone-level metrics}
+For a CAM $M$ and zones $Z_1,\dots,Z_6$, the mean activation of zone $k$ is $a_k=\frac{1}{|Z_k|}\sum_{p\in Z_k}M(p)$ and its CAM share is $s_k=\sum_{p\in Z_k}M(p)/\sum_p M(p)$. The \emph{box zone} $k^\ast$ is the zone containing the largest fraction of the expert box. We report:
+\begin{itemize}
+\item \textbf{Zone hit}: $\arg\max_k a_k = k^\ast$.
+\item \textbf{Top-2 zone hit}: $k^\ast$ is among the two highest-activation zones.
+\item \textbf{Any-zone hit}: the peak zone contains at least 20\% of the box (boxes spanning zones).
+\item \textbf{CAM share in box zone} $s_{k^\ast}$.
+\end{itemize}
+We also report partition-independent metrics: the pointing game~\cite{zhang2018pointing}, the fraction of CAM energy inside the box, and the IoU between the Otsu-thresholded~\cite{otsu1979} CAM and the box.
+
+\paragraph{Baselines and statistics.} A CAM that always pointed to the most common zone for a finding (e.g.\ lower zones for effusion) would score well without localising anything. We therefore compute a \emph{leave-one-out class-prior baseline} that predicts, for each box, the most frequent box zone among the other boxes of the same class. Proportions carry Wilson 95\% confidence intervals; paired comparisons (grid vs.\ anatomical, method vs.\ method, on the same boxes) use the exact McNemar test~\cite{mcnemar1947}. Classification metrics carry 95\% percentile confidence intervals from 1,000 patient-level bootstrap resamples. Cardiomegaly is annotated on the cardiac silhouette, between the lung zones, and is excluded from zone metrics.
+
+\subsection{Explanation-derived descriptors}
+\paragraph{ASFI.} For a CAM $M$ with Otsu threshold $\tau$, activated fraction $AF=|\{p:M(p)>\tau\}|/|M|$ and mean activated intensity $MI$, and class probability $P$, the activation-based severity index is $\mathrm{ASFI}=100\,(0.4\,AF+0.3\,MI+0.3\,P)$. The weights are heuristic; we therefore test whether ASFI and its extent component track an objective proxy of lesion extent, the expert box area (Spearman correlation).
+\paragraph{ZCI.} The zone concentration index is the Herfindahl--Hirschman index of zone activations, $\mathrm{ZCI}=\sum_k\big(a_k/\sum_j a_j\big)^2\in[1/6,1]$. We test whether it is higher for focal findings (mass, nodule) than for diffuse ones (infiltration, pneumonia, effusion, atelectasis) using a one-sided Mann--Whitney test.
+
+%% ---------------------------------------------------------------------------
+\section{Results}\label{sec:results}
+
+\subsection{Classification}
+On the held-out NIH test split the classifier reaches a mean AUROC of 0.819 (0.812--0.827) and a mean AUPRC of 0.301 (0.287--0.316) (Table~ef{tab:cls}). Discrimination is highest for Cardiomegaly (0.911) and lowest for Infiltrate (0.714), the most diffuse and label-noisy finding in ChestX-ray14. These figures are in the range reported for DenseNet-121 on patient-wise NIH splits \cite{rajpurkar2017chexnet,wang2017chestxray8}; the classifier is a fixed, representative backbone for the explanation study rather than a contribution in itself.
+
+\begin{table}[t]
+\caption{Classification on the NIH test split (16,491 images, 4,621 patients). 95\% CIs from 1,000 patient-level bootstrap resamples; thresholds by Youden's $J$ on validation.}\label{tab:cls}
+\centering
+\begin{tabular}{lrcccc}
+\toprule
+Finding & Pos. & AUROC (95\% CI) & AUPRC (95\% CI) & Sens. & Spec. \\
+\midrule
+Atelectasis & 1,677 & 0.819 (0.807--0.832) & 0.369 (0.338--0.401) & 0.76 & 0.73 \\
+Cardiomegaly & 439 & 0.911 (0.891--0.926) & 0.316 (0.246--0.383) & 0.85 & 0.83 \\
+Effusion & 1,892 & 0.881 (0.870--0.890) & 0.513 (0.478--0.543) & 0.80 & 0.82 \\
+Infiltrate & 2,932 & 0.714 (0.701--0.727) & 0.338 (0.315--0.360) & 0.56 & 0.75 \\
+Mass & 727 & 0.825 (0.800--0.848) & 0.290 (0.243--0.341) & 0.71 & 0.79 \\
+Nodule & 945 & 0.764 (0.743--0.785) & 0.232 (0.198--0.267) & 0.63 & 0.76 \\
+Pneumonia & 214 & 0.769 (0.737--0.799) & 0.040 (0.031--0.054) & 0.70 & 0.73 \\
+Pneumothorax & 725 & 0.872 (0.848--0.892) & 0.308 (0.248--0.371) & 0.77 & 0.81 \\
+\midrule
+Mean & & 0.819 (0.812--0.827) & 0.301 (0.287--0.316) & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Zone-level faithfulness: grid vs.\ anatomy-aware zones}
+Table~\ref{tab:zone} and Fig.~\ref{fig:zonehit} compare the four methods on the 834 lung-finding boxes with successful segmentation. Under the fixed grid, Grad-CAM++ and LayerCAM place their peak zone on the expert-box zone for 59.6\% and 59.2\% of boxes, well above the class-prior baseline (31.5\%) and chance (16.7\%). Under anatomy-aware zones the same maps score 45.4\% and 45.8\%. The drop is consistent across methods (Grad-CAM 43.9\%$\to$38.4\%, Score-CAM 55.6\%$\to$41.5\%) and significant for each (exact McNemar, all $p<0.001$); for LayerCAM, 179 boxes are hits only on the grid and 67 only on anatomical zones. Top-2 zone hit falls in the same way (LayerCAM 83.5\%$\to$69.9\%). The drop is not explained by a harder target: the leave-one-out class prior is essentially the same for the two partitions (31.5\% vs.\ 31.8\%).
+
+The CAM mass shows why. Grid zones tile the whole image, so every activation belongs to some zone. Anatomical zones cover on average 35.4\% of the image and receive 56.0\% of the LayerCAM mass (Grad-CAM++ 56.1\%, Score-CAM 56.6\%); the remaining 44\% lies over the mediastinum, hila, diaphragm, chest wall and soft tissue. A grid zone that contains such off-lung activation can win the arg-max and be counted as a correct ``lung zone'' although the evidence is not in the lung. Pixel-level metrics confirm that localisation is coarse: the pointing game succeeds for 17--26\% of boxes and only 12--13\% of CAM energy falls inside the box.
+
+On boxes from held-out images (Table~\ref{tab:zone}, lower block) the gap persists (LayerCAM 55.4\% vs.\ 38.8\%, $p<10^{-5}$), and under anatomical zones no method exceeds the held-out class prior (41.3\%). With 242 boxes the confidence intervals are wide, but on unseen images we cannot claim zone-level localisation beyond what the finding's typical location already predicts.
+
+\begin{table}[t]
+\caption{Zone-level and box-level localisation on lung-finding boxes (cardiomegaly excluded). Hit rates in \% with Wilson 95\% CIs; $p$: exact McNemar test, grid vs.\ anatomical zone hit on the same boxes; CAM mass in lungs: share of CAM mass inside the anatomical zones; Pointing: pointing-game hit rate.}\label{tab:zone}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccccccc}
+\toprule
+ & Empty & \multicolumn{2}{c}{Zone hit} & \multicolumn{2}{c}{Top-2 hit} & & CAM mass & \\
+Method & map & Grid & Anatomical & Grid & Anat. & $p$ & in lungs & Pointing \\
+\midrule
+\multicolumn{9}{l}{\emph{All boxes ($n=834$)}}\\
+Grad-CAM   & 19.4 & 43.9 (40.6--47.3) & 38.4 (35.1--41.7) & 63.1 & 53.8 & $4\times10^{-4}$ & 47.1 & 17.4 \\
+Grad-CAM++ & 0.0 & 59.6 (56.2--62.9) & 45.4 (42.1--48.8) & 83.8 & 70.7 & $<10^{-12}$ & 56.1 & 22.7 \\
+LayerCAM   & 0.0 & 59.2 (55.9--62.5) & 45.8 (42.4--49.2) & 83.5 & 69.9 & $<10^{-12}$ & 56.0 & 23.0 \\
+Score-CAM  & 0.0 & 55.6 (52.2--59.0) & 41.5 (38.2--44.9) & 80.7 & 66.1 & $<10^{-12}$ & 56.6 & 25.5 \\
+Class prior & -- & 31.5 & 31.8 & & & & & \\
+\midrule
+\multicolumn{9}{l}{\emph{Held-out images ($n=242$)}}\\
+Grad-CAM   & 21.1 & 38.8 (32.9--45.1) & 36.4 (30.6--42.6) & 64.0 & 50.4 & 0.45 & 44.8 & 14.0 \\
+Grad-CAM++ & 0.0 & 55.8 (49.5--61.9) & 37.2 (31.3--43.4) & 83.1 & 64.9 & $<10^{-6}$ & 55.4 & 16.1 \\
+LayerCAM   & 0.0 & 55.4 (49.1--61.5) & 38.8 (32.9--45.1) & 82.6 & 62.8 & $<10^{-5}$ & 55.4 & 16.1 \\
+Score-CAM  & 0.0 & 51.2 (45.0--57.5) & 35.1 (29.4--41.3) & 77.7 & 59.5 & $<10^{-5}$ & 55.8 & 18.2 \\
+Class prior & -- & 31.4 & 41.3 & & & & & \\
+\midrule
+Chance & -- & 16.7 & 16.7 & & & & 35.4$^\ast$ & \\
+\bottomrule
+\end{tabular}
+
+\footnotesize{$^\ast$Mean share of the image covered by the anatomical zones, i.e.\ the CAM mass in the lungs expected from a spatially uniform map.}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig_zone_hit.pdf}
+\caption{Zone-hit accuracy of four CAM methods under the fixed grid and anatomy-aware zones on 834 lung-finding boxes, with Wilson 95\% CIs, the leave-one-out class-prior baselines and chance.}\label{fig:zonehit}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_examples.pdf}
+\caption{Held-out examples (highest-probability box per finding): anatomy-aware zones (white outlines), expert boxes (green) and the four CAM methods. Even in these confident cases, much of the activation extends over the mediastinum and chest wall.}\label{fig:examples}
+\end{figure}
+
+\subsection{Comparison of methods}
+Under anatomical zones Grad-CAM++ and LayerCAM are indistinguishable (exact McNemar $p=0.76$); both outperform Grad-CAM ($p<10^{-5}$), and LayerCAM outperforms Score-CAM ($p=0.002$; Grad-CAM++ vs.\ Score-CAM $p=0.009$). Grad-CAM and Score-CAM do not differ significantly ($p=0.10$). Score-CAM has the best pointing-game rate (25.5\%) but a lower zone hit, i.e.\ sharper but less reliably placed peaks.
+
+\subsection{Per-finding behaviour and empty maps}
+Per finding (Fig.~\ref{fig:perclass}), LayerCAM's anatomical zone hit is highest for mass (52.4\%), atelectasis (51.7\%), infiltration (51.2\%) and pneumonia (50.4\%), lower for effusion (46.7\%) and nodule (36.7\%), and lowest for pneumothorax (22.7\%). The grid advantage is largest for pneumonia (75.0\% vs.\ 50.4\%) and effusion (62.7\% vs.\ 46.7\%). Effusion is also where the raw lung mask is least adequate: only 44.8\% of an effusion box lies inside the raw masks, against 65.1\% inside the hull-based zones.
+
+Grad-CAM returns an all-zero map for 19.4\% of lung-finding boxes (Fig.~\ref{fig:empty}). This happens when the gradient-weighted sum of feature maps is non-positive everywhere, so nothing survives the final ReLU, and it is concentrated in low-confidence predictions: 66\% of boxes predicted with probability below 0.1 receive an empty Grad-CAM, 17\% between 0.1 and 0.2, and none above 0.3. Grad-CAM++, LayerCAM and Score-CAM never return an empty map. Counting empty maps as misses accounts for much of Grad-CAM's deficit relative to the other gradient methods.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\linewidth]{figures/fig_per_class.pdf}
+\caption{Per-finding zone-hit accuracy of LayerCAM under the fixed grid and anatomy-aware zones.}\label{fig:perclass}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/fig_empty_cam.pdf}
+\caption{Share of empty Grad-CAM maps by model probability for the annotated class (all 984 boxes).}\label{fig:empty}
+\end{figure}
+
+\subsection{ASFI and ZCI}
+Neither descriptor carries much information about the annotated lesion (Fig.~\ref{fig:asfi}). The Otsu-activated fraction, the extent component of ASFI, is uncorrelated with expert box area (Spearman $\rho=0.03$, $p=0.39$); ASFI as a whole correlates weakly ($\rho=0.14$, $p<10^{-4}$). ZCI is slightly higher for focal findings (mass, nodule; median 0.200) than for diffuse ones (median 0.194; one-sided Mann--Whitney $p=0.003$), but both medians are close to the uniform value $1/6\approx0.167$: zone activations are spread almost evenly, consistent with the coarse $7\times7$ resolution of the final DenseNet block.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_asfi_area.pdf}
+\caption{Activated fraction (Otsu) and ASFI against expert box area (lung-finding boxes).}\label{fig:asfi}
+\end{figure}
+
+%% ---------------------------------------------------------------------------
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{Grid zones flatter CAMs.} The central result is that the choice of zone partition, a detail usually left implicit, changes the apparent quality of zone-level explanations by up to 14 percentage points, with no change in task difficulty as measured by the class prior. A fixed grid assigns mediastinal, diaphragmatic and chest-wall activation to the nearest ``lung zone'' and so credits maps whose evidence is not in the lung; with 44\% of CAM mass outside the lung fields, this happens often. Zone-level results computed over grid cells or rectangular detector boxes, such as the 85.2\% zone alignment reported by Dahan et al.~\cite{zoneaware2026pneumonia}, should therefore be read with care. We recommend that zone-level explanation studies use anatomy-derived zones and report a class-prior baseline alongside any hit rate.
+
+\paragraph{Beating the prior.} Over all boxes, the best CAMs beat the class prior by about 14 points under anatomical zones, so they carry some location information beyond ``effusion is usually basal''. On held-out images they do not. Most boxes lie in training images; the classifier never sees boxes, but it has fitted those images, and its explanations appear more spatially specific there. Zone-level explanation studies on ChestX-ray14 commonly evaluate on annotated images drawn from the training pool, and this result suggests they should report held-out images separately.
+
+\paragraph{Empty Grad-CAM maps.} A system that shows a Grad-CAM for every finding, or for findings below the decision threshold, will show a blank map, or noise amplified by min--max normalisation, for many low-probability findings. Grad-CAM++ and LayerCAM do not have this failure and localise at least as well in our evaluation.
+
+\paragraph{Marginal findings need the hull correction.} Lung segmenters trace aerated lung, so they exclude much of the area covered by effusion, pneumothorax and atelectasis annotations. Without the hull correction, an anatomical evaluation would penalise CAMs for pointing at fluid or air outside the segmented lung. Even with it, 35\% of an average effusion box lies outside the zones, which partly explains effusion's low anatomical zone hit.
+
+\paragraph{What ASFI and ZCI can claim.} Severity-style indices derived from CAMs, including ours and the SAI of Rahman et al.~\cite{rahman2024sai}, are attractive because they need no extra labels. Our tests suggest caution: CAM extent does not track lesion extent, and zone concentration barely separates focal from diffuse findings. Such indices should not be presented as severity measures without validation against radiologist grades.
+
+\paragraph{Limitations.} NIH labels are text-mined and noisy; bounding boxes are sparse (984) and rectangular; most boxes come from training images, although the classifier never sees boxes and held-out results are reported separately; the lung segmentation model is itself imperfect and the thirds-based zones approximate, rather than reproduce, rib-based radiological zones; the evaluation uses a single architecture, a single CAM layer with $7\times7$ resolution and a single dataset; the held-out subset is small (242 lung-finding boxes); ASFI weights are heuristic and have not been validated against radiologist severity grades.
+
+\section{Conclusion}\label{sec:conclusion}
+Zone-level summaries make CAM explanations legible to clinicians, but how the zones are drawn matters. On 834 expert-annotated lung findings, four CAM methods lose 6--14 points of zone-hit accuracy when a fixed grid is replaced by lung-derived zones, about 44\% of their mass falls outside the lungs, and on held-out images they do not beat a class-prior baseline. We recommend anatomy-aware zones, a class-prior baseline and paired tests as the minimum standard for zone-level explanation claims, and Grad-CAM++ or LayerCAM over Grad-CAM for low-confidence findings. The evaluation code is released for reuse.
+
+\backmatter
+
+\bmhead{Data availability} NIH ChestX-ray14 is publicly available from the NIH Clinical Center. Bounding boxes are from the same release.
+
+\bmhead{Code availability} The code for training, zone construction, evaluation and figures, together with the trained model weights and per-box results, is available at \url{https://github.com/kailas9017/explainx-ray-v2/tree/research-paper} (directory \texttt{backend/research}).
+
+\section*{Declarations}
+\begin{itemize}
+\item Funding: No funding was received for conducting this study.
+\item Conflict of interest: The authors declare no competing interests.
+\item Ethics approval: Not applicable; only de-identified public data were used.
+\end{itemize}
+
+\bibliography{references}
+
+\end{document}

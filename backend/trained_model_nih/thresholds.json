@@ -1,0 +1,14 @@
+{
+  "method": "youden_j",
+  "split": "NIH validation",
+  "thresholds": {
+    "Atelectasis": 0.101513,
+    "Cardiomegaly": 0.031918,
+    "Effusion": 0.167731,
+    "Infiltrate": 0.21309,
+    "Mass": 0.044037,
+    "Nodule": 0.048434,
+    "Pneumonia": 0.011079,
+    "Pneumothorax": 0.024768
+  }
+}

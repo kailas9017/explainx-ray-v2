@@ -1,0 +1,69 @@
+{
+  "n_boxes": 834,
+  "box_in_raw_mask_mean": 0.7381148953017,
+  "box_in_hull_mean": 0.8662814410187468,
+  "box_outside_raw_mask_mean": 0.26188510469829995,
+  "box_outside_hull_mean": 0.13371855898125318,
+  "per_class": {
+    "Atelectasis": {
+      "raw": 0.765,
+      "hull": 0.904,
+      "cam_in_lung_zones_layercam": 0.546,
+      "n": 180
+    },
+    "Effusion": {
+      "raw": 0.448,
+      "hull": 0.651,
+      "cam_in_lung_zones_layercam": 0.524,
+      "n": 152
+    },
+    "Infiltrate": {
+      "raw": 0.807,
+      "hull": 0.922,
+      "cam_in_lung_zones_layercam": 0.529,
+      "n": 123
+    },
+    "Mass": {
+      "raw": 0.888,
+      "hull": 0.953,
+      "cam_in_lung_zones_layercam": 0.607,
+      "n": 84
+    },
+    "Nodule": {
+      "raw": 0.966,
+      "hull": 0.997,
+      "cam_in_lung_zones_layercam": 0.622,
+      "n": 79
+    },
+    "Pneumonia": {
+      "raw": 0.815,
+      "hull": 0.917,
+      "cam_in_lung_zones_layercam": 0.569,
+      "n": 119
+    },
+    "Pneumothorax": {
+      "raw": 0.645,
+      "hull": 0.819,
+      "cam_in_lung_zones_layercam": 0.582,
+      "n": 97
+    }
+  },
+  "cam_mass_in_anatomical_zones_by_method": {
+    "gradcam": {
+      "mean": 0.471,
+      "median": 0.559
+    },
+    "gradcam++": {
+      "mean": 0.561,
+      "median": 0.564
+    },
+    "layercam": {
+      "mean": 0.56,
+      "median": 0.564
+    },
+    "scorecam": {
+      "mean": 0.566,
+      "median": 0.573
+    }
+  }
+}

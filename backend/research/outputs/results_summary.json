@@ -1,0 +1,358 @@
+{
+  "n_boxes_total": 984,
+  "lung_segmentation_failures": 4,
+  "n_lung_boxes": 834,
+  "n_lung_boxes_heldout": 242,
+  "primary_method": "layercam",
+  "zone_hit_all": {
+    "gradcam": {
+      "n": 834,
+      "cam_empty": 0.19424460431654678,
+      "pointing": 0.17386091127098321,
+      "energy_in_box": 0.1264587258411221,
+      "iou_otsu": 0.11373881480818555,
+      "grid_zone_hit": 0.43884892086330934,
+      "grid_zone_hit_ci": [
+        0.40552556307284604,
+        0.4727330481013903
+      ],
+      "grid_top2": 0.6306954436450839,
+      "grid_hit_any": 0.5239808153477218,
+      "grid_cam_in_zones": 0.8057553988872876,
+      "anat_zone_hit": 0.38369304556354916,
+      "anat_zone_hit_ci": [
+        0.35129398882565244,
+        0.4171586637998558
+      ],
+      "anat_top2": 0.5383693045563549,
+      "anat_hit_any": 0.4676258992805755,
+      "anat_cam_in_zones": 0.4707799115287483,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 60,
+        "grid_only": 106,
+        "p_value": 0.0004433262798930085
+      }
+    },
+    "gradcam++": {
+      "n": 834,
+      "cam_empty": 0.0,
+      "pointing": 0.22661870503597123,
+      "energy_in_box": 0.1265770190117955,
+      "iou_otsu": 0.15358373819295526,
+      "grid_zone_hit": 0.5959232613908872,
+      "grid_zone_hit_ci": [
+        0.5622526842492634,
+        0.628714200183307
+      ],
+      "grid_top2": 0.8381294964028777,
+      "grid_hit_any": 0.6870503597122302,
+      "grid_cam_in_zones": 1.0000000011386672,
+      "anat_zone_hit": 0.45443645083932854,
+      "anat_zone_hit_ci": [
+        0.42092884821312215,
+        0.4883618816814068
+      ],
+      "anat_top2": 0.7074340527577938,
+      "anat_hit_any": 0.5719424460431655,
+      "anat_cam_in_zones": 0.5605369990456655,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 62,
+        "grid_only": 180,
+        "p_value": 1.6061939558160033e-14
+      }
+    },
+    "layercam": {
+      "n": 834,
+      "cam_empty": 0.0,
+      "pointing": 0.2302158273381295,
+      "energy_in_box": 0.12441360182145345,
+      "iou_otsu": 0.15176433159829392,
+      "grid_zone_hit": 0.592326139088729,
+      "grid_zone_hit_ci": [
+        0.5586255855200041,
+        0.6251800407463451
+      ],
+      "grid_top2": 0.8345323741007195,
+      "grid_hit_any": 0.6906474820143885,
+      "grid_cam_in_zones": 0.9999999999315047,
+      "anat_zone_hit": 0.4580335731414868,
+      "anat_zone_hit_ci": [
+        0.42448817352511137,
+        0.491963814535639
+      ],
+      "anat_top2": 0.6990407673860911,
+      "anat_hit_any": 0.5719424460431655,
+      "anat_cam_in_zones": 0.5603341493313776,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 67,
+        "grid_only": 179,
+        "p_value": 5.82807070110424e-13
+      }
+    },
+    "scorecam": {
+      "n": 834,
+      "cam_empty": 0.0,
+      "pointing": 0.25539568345323743,
+      "energy_in_box": 0.12437948581192242,
+      "iou_otsu": 0.148377224132809,
+      "grid_zone_hit": 0.5563549160671463,
+      "grid_zone_hit_ci": [
+        0.5224545287196258,
+        0.5897385158845094
+      ],
+      "grid_top2": 0.8069544364508393,
+      "grid_hit_any": 0.6594724220623501,
+      "grid_cam_in_zones": 0.9999999969556242,
+      "anat_zone_hit": 0.4148681055155875,
+      "anat_zone_hit_ci": [
+        0.3818937818977482,
+        0.44862310816834544
+      ],
+      "anat_top2": 0.6606714628297362,
+      "anat_hit_any": 0.5251798561151079,
+      "anat_cam_in_zones": 0.5658110009518127,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 65,
+        "grid_only": 183,
+        "p_value": 3.5337222207216934e-14
+      }
+    }
+  },
+  "zone_hit_heldout": {
+    "gradcam": {
+      "n": 242,
+      "cam_empty": 0.21074380165289255,
+      "pointing": 0.14049586776859505,
+      "energy_in_box": 0.11208264270571958,
+      "iou_otsu": 0.09535089281248597,
+      "grid_zone_hit": 0.3884297520661157,
+      "grid_zone_hit_ci": [
+        0.32922152478008165,
+        0.4511248445894637
+      ],
+      "grid_top2": 0.640495867768595,
+      "grid_hit_any": 0.47107438016528924,
+      "grid_cam_in_zones": 0.7892561971589135,
+      "anat_zone_hit": 0.36363636363636365,
+      "anat_zone_hit_ci": [
+        0.3055962279985581,
+        0.4259382234531084
+      ],
+      "anat_top2": 0.5041322314049587,
+      "anat_hit_any": 0.4297520661157025,
+      "anat_cam_in_zones": 0.44805396074229503,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 19,
+        "grid_only": 25,
+        "p_value": 0.4513808323961257
+      }
+    },
+    "gradcam++": {
+      "n": 242,
+      "cam_empty": 0.0,
+      "pointing": 0.16115702479338842,
+      "energy_in_box": 0.10880547052850018,
+      "iou_otsu": 0.13733629966932434,
+      "grid_zone_hit": 0.5578512396694215,
+      "grid_zone_hit_ci": [
+        0.49485778536608,
+        0.6190366897756372
+      ],
+      "grid_top2": 0.8305785123966942,
+      "grid_hit_any": 0.6239669421487604,
+      "grid_cam_in_zones": 0.9999999995151666,
+      "anat_zone_hit": 0.371900826446281,
+      "anat_zone_hit_ci": [
+        0.3134528238318814,
+        0.43435226692574475
+      ],
+      "anat_top2": 0.6487603305785123,
+      "anat_hit_any": 0.49586776859504134,
+      "anat_cam_in_zones": 0.5541969517720681,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 14,
+        "grid_only": 59,
+        "p_value": 1.0136448982171495e-07
+      }
+    },
+    "layercam": {
+      "n": 242,
+      "cam_empty": 0.0,
+      "pointing": 0.16115702479338842,
+      "energy_in_box": 0.10701482364705578,
+      "iou_otsu": 0.13405935232915597,
+      "grid_zone_hit": 0.5537190082644629,
+      "grid_zone_hit_ci": [
+        0.49073304311923793,
+        0.6150261123694997
+      ],
+      "grid_top2": 0.8264462809917356,
+      "grid_hit_any": 0.6239669421487604,
+      "grid_cam_in_zones": 1.0000000032092276,
+      "anat_zone_hit": 0.3884297520661157,
+      "anat_zone_hit_ci": [
+        0.32922152478008165,
+        0.4511248445894637
+      ],
+      "anat_top2": 0.628099173553719,
+      "anat_hit_any": 0.5041322314049587,
+      "anat_cam_in_zones": 0.5544257962062069,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 17,
+        "grid_only": 57,
+        "p_value": 3.3971668169915183e-06
+      }
+    },
+    "scorecam": {
+      "n": 242,
+      "cam_empty": 0.0,
+      "pointing": 0.18181818181818182,
+      "energy_in_box": 0.10466940396733909,
+      "iou_otsu": 0.1270341017985466,
+      "grid_zone_hit": 0.512396694214876,
+      "grid_zone_hit_ci": [
+        0.4497192487936354,
+        0.5746867101653039
+      ],
+      "grid_top2": 0.7768595041322314,
+      "grid_hit_any": 0.5909090909090909,
+      "grid_cam_in_zones": 0.9999999963194478,
+      "anat_zone_hit": 0.3512396694214876,
+      "anat_zone_hit_ci": [
+        0.2938467501681457,
+        0.4132817423245814
+      ],
+      "anat_top2": 0.5950413223140496,
+      "anat_hit_any": 0.4669421487603306,
+      "anat_cam_in_zones": 0.5580450256395657,
+      "mcnemar_grid_vs_anat": {
+        "anat_only": 15,
+        "grid_only": 54,
+        "p_value": 2.612848003590018e-06
+      }
+    }
+  },
+  "class_prior_baseline_all": {
+    "grid": 0.31534772182254195,
+    "anat": 0.31774580335731417
+  },
+  "class_prior_baseline_heldout": {
+    "grid": 0.3140495867768595,
+    "anat": 0.4132231404958678
+  },
+  "per_class_primary": {
+    "grid_zone_hit": {
+      "Pneumothorax": 0.268,
+      "Nodule": 0.506,
+      "Effusion": 0.625,
+      "Pneumonia": 0.748,
+      "Infiltrate": 0.65,
+      "Atelectasis": 0.617,
+      "Mass": 0.631
+    },
+    "anat_zone_hit": {
+      "Pneumothorax": 0.227,
+      "Nodule": 0.367,
+      "Effusion": 0.467,
+      "Pneumonia": 0.504,
+      "Infiltrate": 0.512,
+      "Atelectasis": 0.517,
+      "Mass": 0.524
+    }
+  },
+  "pairwise_methods_anat_mcnemar": {
+    "gradcam vs gradcam++": {
+      "gradcam++_only": 109,
+      "gradcam_only": 50,
+      "p_value": 3.3064765101721643e-06
+    },
+    "gradcam vs layercam": {
+      "layercam_only": 125,
+      "gradcam_only": 63,
+      "p_value": 7.208698186924752e-06
+    },
+    "gradcam vs scorecam": {
+      "scorecam_only": 131,
+      "gradcam_only": 105,
+      "p_value": 0.10345923511249469
+    },
+    "gradcam++ vs layercam": {
+      "layercam_only": 23,
+      "gradcam++_only": 20,
+      "p_value": 0.7607916425613439
+    },
+    "gradcam++ vs scorecam": {
+      "scorecam_only": 60,
+      "gradcam++_only": 93,
+      "p_value": 0.009453836147291133
+    },
+    "layercam vs scorecam": {
+      "scorecam_only": 49,
+      "layercam_only": 85,
+      "p_value": 0.002371823546444492
+    }
+  },
+  "empty_cam_rate_by_probability": {
+    "gradcam": {
+      "<0.1": 0.662,
+      "0.1-0.2": 0.168,
+      "0.2-0.3": 0.058,
+      "0.3-0.5": 0.0,
+      ">=0.5": 0.0
+    },
+    "gradcam++": {
+      "<0.1": 0.0,
+      "0.1-0.2": 0.0,
+      "0.2-0.3": 0.0,
+      "0.3-0.5": 0.0,
+      ">=0.5": 0.0
+    },
+    "layercam": {
+      "<0.1": 0.0,
+      "0.1-0.2": 0.0,
+      "0.2-0.3": 0.0,
+      "0.3-0.5": 0.0,
+      ">=0.5": 0.0
+    },
+    "scorecam": {
+      "<0.1": 0.0,
+      "0.1-0.2": 0.0,
+      "0.2-0.3": 0.0,
+      "0.3-0.5": 0.0,
+      ">=0.5": 0.0
+    }
+  },
+  "asfi_vs_box_area_spearman": {
+    "asfi": {
+      "rho": 0.1392240133485295,
+      "p": 5.476736499153474e-05
+    },
+    "activated_fraction": {
+      "rho": 0.029937526235383028,
+      "p": 0.3878821883990292
+    },
+    "energy_in_box": {
+      "rho": 0.941156513704834,
+      "p": 0.0
+    }
+  },
+  "zci": {
+    "median_by_class": {
+      "Atelectasis": 0.199,
+      "Effusion": 0.196,
+      "Infiltrate": 0.188,
+      "Mass": 0.216,
+      "Nodule": 0.194,
+      "Pneumonia": 0.189,
+      "Pneumothorax": 0.206
+    },
+    "focal_median": 0.2,
+    "diffuse_median": 0.194,
+    "mannwhitney_focal_gt_diffuse_p": 0.002565357936250164,
+    "kruskal_across_classes_p": 1.0171310624932622e-07
+  },
+  "box_inside_zones_mean": {
+    "grid": 1.0,
+    "anat": 0.8662814410187468
+  }
+}
