@@ -32,6 +32,22 @@ ANATOMICAL_REGION = {
 }
 
 OOD_STATS_PATH = os.path.join(MODEL_DIR, "ood_stats.npz")
+THRESHOLDS_PATH = os.path.join(os.path.dirname(LABELS_PATH), "thresholds.json")
+
+
+def _load_thresholds(labels):
+    """Load calibrated per-class cutoffs; use 0.5 until validation calibration exists."""
+    if not os.path.isfile(THRESHOLDS_PATH):
+        return {name: 0.5 for name in labels}
+    try:
+        with open(THRESHOLDS_PATH, "r") as f:
+            saved = json.load(f).get("thresholds", {})
+        return {
+            name: float(saved[name]) if name in saved and 0.0 <= float(saved[name]) <= 1.0 else 0.5
+            for name in labels
+        }
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return {name: 0.5 for name in labels}
 
 class ModelNotReadyError(Exception):
     """Raised when best_model.pth / labels.json are missing or inconsistent.
@@ -125,13 +141,11 @@ def analyze_image_bytes(image_bytes: bytes):
 
     disease_prob_map = {name: round(float(p), 4) for name, p in zip(_LABELS, probs)}
     sorted_findings = sorted(disease_prob_map.items(), key=lambda x: x[1], reverse=True)
-
-    top_prob = sorted_findings[0][1]
-    threshold = max(0.25, top_prob * 0.45)
-    # Do not force the top class into the report when every class is below the
-    # minimum confidence threshold. That creates misleading findings for
-    # unrelated images (for example, a leg X-ray classified as 6% Effusion).
-    top_findings = [f for f in sorted_findings if f[1] >= threshold][:3]
+    class_thresholds = _load_thresholds(_LABELS)
+    top_findings = [
+        (name, probability) for name, probability in sorted_findings
+        if probability >= class_thresholds[name]
+    ][:3]
 
     findings_list = []
     primary_cam = None
@@ -173,6 +187,7 @@ def analyze_image_bytes(image_bytes: bytes):
         "numClasses": len(_LABELS),
         "pathologiesScreened": _LABELS,
         "allProbabilities": disease_prob_map,
+        "classThresholds": class_thresholds,
         "findings": findings_list,
         "heatmapOverlay": overlay_b64,
         "primaryZones": zone_breakdown(primary_cam) if primary_cam is not None else [],

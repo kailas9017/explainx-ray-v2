@@ -8,6 +8,8 @@ const SEVERITY_COLOR = {
 
 export default function FindingsPanel({ result, pathologiesScreened }) {
   const findings = result?.findings || [];
+  const probabilities = result?.allProbabilities || {};
+  const thresholds = result?.classThresholds || {};
 
   return (
     <div className="panel">
@@ -21,7 +23,9 @@ export default function FindingsPanel({ result, pathologiesScreened }) {
       <div className="findings-body">
         {findings.length === 0 ? (
           <div className="findings-empty">
-            No scan analyzed yet. Findings will appear here, ranked by model confidence.
+            {result
+              ? "No class cleared its decision threshold for this scan. See all probabilities below."
+              : "No scan analyzed yet. Findings will appear here, ranked by model confidence."}
           </div>
         ) : (
           findings.map((f) => (
@@ -63,6 +67,30 @@ export default function FindingsPanel({ result, pathologiesScreened }) {
           ))
         )}
       </div>
+
+      {Object.keys(probabilities).length > 0 && (
+        <details className="probability-details">
+          <summary>All class probabilities and decision thresholds</summary>
+          <div className="probability-list">
+            {Object.entries(probabilities)
+              .sort((a, b) => b[1] - a[1])
+              .map(([name, probability]) => {
+                const threshold = thresholds[name] ?? 0.5;
+                const detected = probability >= threshold;
+                return (
+                  <div className="probability-row" key={name}>
+                    <span>{name}</span>
+                    <span>{Math.round(probability * 100)}%</span>
+                    <span className={detected ? "probability-detected" : "probability-negative"}>
+                      {detected ? "Above threshold" : "Below threshold"}
+                    </span>
+                    <span>Cutoff {Math.round(threshold * 100)}%</span>
+                  </div>
+                );
+              })}
+          </div>
+        </details>
+      )}
 
       {pathologiesScreened && (
         <div className="screened-list">

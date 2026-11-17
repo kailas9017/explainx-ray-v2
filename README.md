@@ -25,6 +25,11 @@ This version removes both problems structurally:
   either file is missing, or if their class counts disagree — loudly, with a
   specific message, instead of a bare PyTorch shape-mismatch traceback.
 
+Predictions use per-class validation thresholds. Training selects each class's
+operating cutoff by Youden's J on held-out validation data and saves it beside
+the experimental checkpoint. The UI displays every class probability and
+whether it clears its cutoff. Checkpoints without calibration use a 0.5 fallback.
+
 ## Project layout
 
 ```
@@ -179,6 +184,14 @@ activation zone.
 If the model isn't trained yet, the header shows **"Model not trained"** and
 `/api/analyze` returns a clear 503 with instructions — it will never fall
 back to fake or mocked results.
+
+## Scope of the displayed analysis
+
+This build currently screens the 8 NIH bounding-box pathologies in
+`DEFAULT_PATHOLOGIES`, not all 14 NIH labels shown in some project diagrams.
+Its severity indicator is an ASFI-based model estimate, not a validated
+clinical severity score. Grad-CAM and zone scores are model explanations and
+should not be interpreted as radiologist-confirmed lesion localization.
 
 ## Notes on the zone-wise analysis
 

@@ -16,3 +16,5 @@ frontend/dist/
 # OS/editor
 .DS_Store
 *.log
+# Archived model checkpoints
+backend/trained_model_old/

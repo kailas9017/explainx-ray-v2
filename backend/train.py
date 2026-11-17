@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve
 
 from config import (
     DEFAULT_PATHOLOGIES, DEVICE, NUM_EPOCHS, LEARNING_RATE,
@@ -66,6 +66,33 @@ def evaluate(model, loader, criterion, device, pathologies):
     avg_loss = total_loss / max(total_observed, 1.0)
     mean_auroc = float(np.nanmean(aurocs))
     return avg_loss, mean_auroc, dict(zip(pathologies, aurocs))
+
+
+def find_youden_thresholds(model, loader, device, pathologies):
+    """Choose per-label operating points that maximize Youden's J on validation."""
+    model.eval()
+    labels_all, probs_all, observed_all = [], [], []
+    with torch.no_grad():
+        for images, labels, observed in loader:
+            probs = torch.sigmoid(model(images.to(device))).cpu().numpy()
+            labels_all.append(labels.numpy())
+            probs_all.append(probs)
+            observed_all.append(observed.numpy().astype(bool))
+
+    labels_all = np.concatenate(labels_all)
+    probs_all = np.concatenate(probs_all)
+    observed_all = np.concatenate(observed_all)
+    thresholds = {}
+    for index, name in enumerate(pathologies):
+        known = observed_all[:, index]
+        y_true = labels_all[known, index]
+        y_score = probs_all[known, index]
+        if len(np.unique(y_true)) < 2:
+            thresholds[name] = 0.5
+            continue
+        fpr, tpr, candidates = roc_curve(y_true, y_score)
+        thresholds[name] = round(float(candidates[np.argmax(tpr - fpr)]), 6)
+    return thresholds
 
 
 def save_checkpoint(model):
@@ -134,6 +161,10 @@ def main():
         if selection_auroc > best_auroc:
             best_auroc = selection_auroc
             save_checkpoint(model)
+            threshold_loader = target_loader if has_chexpert else val_loader
+            thresholds = find_youden_thresholds(model, threshold_loader, DEVICE, DEFAULT_PATHOLOGIES)
+            with open(os.path.join(EXPERIMENT_MODEL_DIR, "thresholds.json"), "w") as f:
+                json.dump({"method": "youden_j", "thresholds": thresholds}, f, indent=2)
             print(f"   -> Experimental checkpoint saved to {EXPERIMENT_MODEL_PATH} (target AUROC {best_auroc:.4f}).")
 
     with open(os.path.join(EXPERIMENT_MODEL_DIR, "history.json"), "w") as f:
